@@ -147,25 +147,66 @@ export function generateItineraryHtmlString(itinerary: Itinerary, agency: Agency
     })
     .join('');
 
-  const logoHtml = agency.logo_url
-    ? `<img crossorigin="anonymous" src="${agency.logo_url}" style="height: 38px; max-width: 160px; object-fit: contain; margin-bottom: 4px;" onerror="this.style.display='none'" />`
-    : `<div style="font-weight: 800; font-size: 18px; color: #0f172a; letter-spacing: -0.02em;">${agency.name}</div>`;
+  const phoneList = agency.phones && agency.phones.length > 0
+    ? agency.phones
+    : agency.phone
+    ? agency.phone.split(/[\/,•|]+/).map((p) => p.trim()).filter(Boolean)
+    : [];
+  const phoneDisplay = phoneList.length > 0 ? phoneList.join(' / ') : agency.phone || '';
+
+  const phoneHtml = phoneDisplay
+    ? `<span style="display: inline-flex; align-items: center; gap: 4px; color: #0f172a; font-weight: 700;"><span>📞</span><span>${phoneDisplay}</span></span>`
+    : '';
+
+  const emailHtml = agency.email
+    ? `<span style="display: inline-flex; align-items: center; gap: 4px; color: #334155;"><span>✉️</span><span>${agency.email}</span></span>`
+    : '';
+
+  const websiteHtml = agency.website
+    ? `<span style="display: inline-flex; align-items: center; gap: 4px; color: ${brandColor}; font-weight: 700;"><span>🌐</span><span>${agency.website}</span></span>`
+    : '';
+
+  const contactItems = [phoneHtml, emailHtml, websiteHtml].filter(Boolean);
+  const contactRowHtml = contactItems.join('<span style="color: #cbd5e1; margin: 0 4px;">•</span>');
+
+  let brandingHtml = '';
+  if (agency.logo_url) {
+    brandingHtml = `
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <img crossorigin="anonymous" src="${agency.logo_url}" alt="${agency.name}" style="max-height: 60px; max-width: 190px; height: auto; object-fit: contain; display: block;" onerror="this.style.display='none'" />
+        <div>
+          <div style="font-weight: 800; font-size: 19px; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2;">${agency.name}</div>
+          <div style="margin-top: 5px; font-size: 11.5px; color: #334155; line-height: 1.4; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;">
+            ${contactRowHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    brandingHtml = `
+      <div>
+        <div style="font-weight: 800; font-size: 22px; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2;">${agency.name}</div>
+        <div style="margin-top: 5px; font-size: 11.5px; color: #334155; line-height: 1.4; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;">
+          ${contactRowHtml}
+        </div>
+      </div>
+    `;
+  }
 
   const custHtml =
     itinerary.customer_name && itinerary.show_customer_name_in_pdf
-      ? `<div style="font-size: 11px; color: #475569; margin-top: 4px;">Prepared for: <strong style="color: #0f172a;">${itinerary.customer_name}</strong></div>`
+      ? `<div style="font-size: 11.5px; color: #475569; margin-top: 5px;">Prepared for: <strong style="color: #0f172a; font-size: 13px;">${itinerary.customer_name}</strong></div>`
       : '';
 
   return `
     <div style="width: 794px; background: #ffffff; color: #0f172a; padding: 32px 36px; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; margin: 0 auto; line-height: 1.5; font-size: 12px;">
       <!-- Header -->
-      <header style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-        <div>
-          ${logoHtml}
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${agency.email} • ${agency.phone} • ${agency.website}</div>
+      <header style="border-bottom: 2px solid ${brandColor}25; padding-bottom: 16px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div style="flex: 1;">
+          ${brandingHtml}
         </div>
-        <div style="text-align: right;">
-          <span style="display: inline-block; padding: 4px 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; border-radius: 4px; background: ${brandColor}15; color: ${brandColor};">
+        <div style="text-align: right; shrink-0;">
+          <span style="display: inline-block; padding: 6px 14px; font-size: 12px; font-weight: 800; text-transform: uppercase; border-radius: 6px; background: ${brandColor}18; color: ${brandColor}; border: 1px solid ${brandColor}40; letter-spacing: 0.05em;">
             ${itinerary.days_count} Days / ${itinerary.nights_count} Nights
           </span>
           ${custHtml}
@@ -221,9 +262,10 @@ export function generateItineraryHtmlString(itinerary: Itinerary, agency: Agency
       }
 
       <!-- Footer -->
-      <footer style="margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b; page-break-inside: avoid;">
-        <p style="font-weight: 600; color: #334155; margin: 0;">${agency.name} — Professional Travel Proposal</p>
-        <p style="margin: 2px 0 0 0;">${agency.footer_disclaimer}</p>
+      <footer style="margin-top: 32px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10.5px; color: #64748b; page-break-inside: avoid;">
+        <p style="font-weight: 700; color: #0f172a; margin: 0; font-size: 11.5px;">${agency.name} — Professional Travel Proposal</p>
+        <p style="margin: 4px 0 0 0; color: #334155; font-size: 10.5px;">${[phoneDisplay ? `📞 ${phoneDisplay}` : '', agency.email ? `✉️ ${agency.email}` : '', agency.website ? `🌐 ${agency.website}` : ''].filter(Boolean).join(' &nbsp;•&nbsp; ')}</p>
+        ${agency.footer_disclaimer ? `<p style="margin: 6px 0 0 0; font-size: 9.5px; color: #64748b; line-height: 1.4;">${agency.footer_disclaimer}</p>` : ''}
       </footer>
     </div>
   `;
