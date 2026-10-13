@@ -27,6 +27,13 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
   const brandColor = agency.brand_colour || '#0284c7';
   const accentColor = isEditorial ? '#c29d59' : brandColor;
 
+  const phoneList = agency.phones && agency.phones.length > 0
+    ? agency.phones
+    : agency.phone
+    ? agency.phone.split(/[\/,•|]+/).map((p) => p.trim()).filter(Boolean)
+    : [];
+  const phoneDisplay = phoneList.length > 0 ? phoneList.join(' / ') : agency.phone || '';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
       <div className="bg-white border border-slate-200 rounded-2xl max-w-5xl w-full h-[95vh] shadow-2xl flex flex-col overflow-hidden text-left">
@@ -101,34 +108,62 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
         <div className="flex-1 overflow-y-auto bg-slate-100 p-4 sm:p-8 flex justify-center">
           <div className="a4-page bg-white text-slate-900 rounded-sm shadow-md p-8 sm:p-12 max-w-3xl w-full text-left">
             {/* Header */}
-            <header className="border-b border-slate-200 pb-4 mb-6 flex items-center justify-between">
-              <div>
-                {agency.logo_url ? (
+            <header className="border-b-2 pb-4 mb-6 flex flex-wrap items-center justify-between gap-4" style={{ borderColor: `${brandColor}30` }}>
+              <div className="flex items-center gap-4">
+                {agency.logo_url && (
                   <img
                     src={agency.logo_url}
                     alt={agency.name}
-                    className="h-9 max-w-[150px] object-contain mb-1"
+                    className="max-h-14 max-w-[190px] w-auto object-contain block"
                   />
-                ) : (
-                  <div className="font-extrabold text-lg tracking-tight text-slate-900">
+                )}
+                <div>
+                  <div className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 leading-tight">
                     {agency.name}
                   </div>
-                )}
-                <div className="text-[10px] text-slate-500">
-                  {agency.email} • {agency.phone} • {agency.website}
+                  <div className="mt-1 text-xs text-slate-700 flex flex-wrap items-center gap-2 font-medium">
+                    {phoneDisplay && (
+                      <span className="inline-flex items-center gap-1 font-bold text-slate-900">
+                        <span>📞</span>
+                        <span>{phoneDisplay}</span>
+                      </span>
+                    )}
+                    {agency.email && (
+                      <>
+                        {phoneDisplay && <span className="text-slate-300">•</span>}
+                        <span className="inline-flex items-center gap-1 text-slate-600">
+                          <span>✉️</span>
+                          <span>{agency.email}</span>
+                        </span>
+                      </>
+                    )}
+                    {agency.website && (
+                      <>
+                        {(phoneDisplay || agency.email) && <span className="text-slate-300">•</span>}
+                        <span className="inline-flex items-center gap-1 font-bold" style={{ color: brandColor }}>
+                          <span>🌐</span>
+                          <span>{agency.website}</span>
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <span
-                  className="inline-block px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded"
-                  style={{ backgroundColor: `${brandColor}15`, color: brandColor }}
+                  className="inline-block px-3.5 py-1.5 text-xs font-black uppercase tracking-wider rounded-md border"
+                  style={{
+                    backgroundColor: `${brandColor}18`,
+                    color: brandColor,
+                    borderColor: `${brandColor}40`,
+                  }}
                 >
                   {itinerary.days_count} Days / {itinerary.nights_count} Nights
                 </span>
                 {itinerary.customer_name && itinerary.show_customer_name_in_pdf && (
-                  <div className="text-[11px] text-slate-600 mt-1">
-                    Prepared for: <strong className="text-slate-900">{itinerary.customer_name}</strong>
+                  <div className="text-xs text-slate-600 mt-1.5">
+                    Prepared for: <strong className="text-slate-900 font-bold text-sm">{itinerary.customer_name}</strong>
                   </div>
                 )}
               </div>
@@ -314,9 +349,14 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
             )}
 
             {/* Footer */}
-            <footer className="mt-10 pt-4 border-t border-slate-200 text-center text-[10px] text-slate-500">
-              <p className="font-semibold text-slate-700">{agency.name} — Travel Proposal</p>
-              <p className="mt-0.5">{agency.footer_disclaimer}</p>
+            <footer className="mt-10 pt-4 border-t border-slate-200 text-center text-[10.5px] text-slate-600">
+              <p className="font-bold text-slate-900 text-xs">{agency.name} — Professional Travel Proposal</p>
+              <p className="mt-1 text-slate-700">
+                {[phoneDisplay ? `📞 ${phoneDisplay}` : '', agency.email ? `✉️ ${agency.email}` : '', agency.website ? `🌐 ${agency.website}` : ''].filter(Boolean).join(' • ')}
+              </p>
+              {agency.footer_disclaimer && (
+                <p className="mt-1.5 text-[9.5px] text-slate-500 leading-relaxed">{agency.footer_disclaimer}</p>
+              )}
             </footer>
           </div>
         </div>
