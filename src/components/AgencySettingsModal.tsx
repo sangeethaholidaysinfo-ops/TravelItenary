@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Building2, Save, Check } from 'lucide-react';
+import { X, Building2, Save, Check, Plus, Trash2, Phone } from 'lucide-react';
 import { Agency } from '../types/itinerary';
 
 interface AgencySettingsModalProps {
@@ -27,6 +27,42 @@ export const AgencySettingsModal: React.FC<AgencySettingsModalProps> = ({
   const [form, setForm] = useState<Agency>({ ...agency });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const initialPhones = form.phones && form.phones.length > 0
+    ? form.phones
+    : form.phone
+    ? form.phone.split(/[\/,•|]+/).map((p) => p.trim()).filter(Boolean)
+    : [''];
+
+  const [phoneList, setPhoneList] = useState<string[]>(initialPhones.length > 0 ? initialPhones : ['']);
+
+  const handlePhoneChange = (index: number, val: string) => {
+    const updated = [...phoneList];
+    updated[index] = val;
+    setPhoneList(updated);
+    const active = updated.map((p) => p.trim()).filter(Boolean);
+    setForm((prev) => ({
+      ...prev,
+      phones: active,
+      phone: active.join(' / '),
+    }));
+  };
+
+  const handleAddPhone = () => {
+    setPhoneList([...phoneList, '']);
+  };
+
+  const handleRemovePhone = (index: number) => {
+    const updated = phoneList.filter((_, idx) => idx !== index);
+    const final = updated.length > 0 ? updated : [''];
+    setPhoneList(final);
+    const active = final.map((p) => p.trim()).filter(Boolean);
+    setForm((prev) => ({
+      ...prev,
+      phones: active,
+      phone: active.join(' / '),
+    }));
+  };
 
   if (!isOpen) return null;
 
@@ -144,33 +180,77 @@ export const AgencySettingsModal: React.FC<AgencySettingsModalProps> = ({
           </div>
 
           {/* Contact Details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            {/* Phone numbers list */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
-              <input
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-sky-500"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Phone className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Contact Phone Numbers</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAddPhone}
+                  className="text-xs text-sky-600 hover:text-sky-700 font-bold flex items-center space-x-1 hover:underline cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add Another Phone</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {phoneList.map((ph, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <span className="text-[11px] font-semibold text-slate-500 w-20 shrink-0">
+                      {idx === 0 ? 'Primary' : `Phone ${idx + 1}`}
+                    </span>
+                    <input
+                      type="text"
+                      value={ph}
+                      onChange={(e) => handlePhoneChange(idx, e.target.value)}
+                      placeholder={idx === 0 ? 'e.g. +91 98498 48495' : 'e.g. +91 98498 48496 (WhatsApp / Support)'}
+                      className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-sky-500 shadow-2xs"
+                    />
+                    {phoneList.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhone(idx)}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Remove phone number"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10.5px] text-slate-500 mt-1.5">
+                Add 2 or more contact or WhatsApp numbers. All numbers will be neatly highlighted in your proposal headers.
+              </p>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-sky-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Website</label>
-              <input
-                type="text"
-                value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-sky-500"
-              />
+
+            {/* Email & Website */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Company Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="e.g. bookings@agency.com"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-sky-500 shadow-2xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Company Website</label>
+                <input
+                  type="text"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                  placeholder="e.g. www.agency.com"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-sky-500 shadow-2xs"
+                />
+              </div>
             </div>
           </div>
 
