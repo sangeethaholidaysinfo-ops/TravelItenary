@@ -92,6 +92,7 @@ export interface Agency {
   logo_url?: string | null;
   brand_colour: string;
   phone: string;
+  phones?: string[];
   email: string;
   website: string;
   footer_disclaimer: string;
